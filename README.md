@@ -1,6 +1,6 @@
 <div align="center">
 
-# Olá, eu sou [Seu nome] 👋
+# Olá, eu sou Gabriel Cardoso 👋
 
 ### Estudante de tecnologia • Desenvolvedor em formação
 

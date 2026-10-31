@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pet-robô de commits</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--page:#e9e4f2;--shell:#c9c2dc;--shellEdge:#9a90b8;--ink:#2a2547;--screen:#1d2145;--screenInk:#d7e0ff;--muted:#5d5680;--field:#f6f3fb;--btn:#ff7a6b;--btnInk:#2a1210;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#14122a;--shell:#3a3560;--shellEdge:#554e86;--ink:#ece8ff;--muted:#a9a2d0;--field:#221f40;--screen:#0f1230}}
+:root[data-theme="dark"]{--page:#14122a;--shell:#3a3560;--shellEdge:#554e86;--ink:#ece8ff;--muted:#a9a2d0;--field:#221f40;--screen:#0f1230}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--page);color:var(--ink);font-family:'VT323',ui-monospace,Menlo,monospace;font-size:21px;line-height:1.25}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:'Press Start 2P',ui-monospace,monospace;font-size:15px;line-height:1.6;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.shell{background:var(--shell);border:4px solid var(--shellEdge);border-radius:18px 18px 46px 18px;padding:16px}
+.screen{background:var(--screen);border:4px solid var(--ink);border-radius:8px;padding:12px;color:var(--screenInk);position:relative}
+canvas{display:block;width:100%;max-width:320px;margin:0 auto;aspect-ratio:20/18;image-rendering:pixelated}
+.zz{position:absolute;top:14px;right:18px;font-family:'Press Start 2P',monospace;font-size:12px;opacity:.8}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.stage{font-family:'Press Start 2P',monospace;font-size:12px;line-height:1.6}
+.say{margin:6px 0 0;min-height:2.6em}
+.bar{height:12px;background:rgba(215,224,255,.18);border-radius:2px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;width:0;background:#ffd166;transition:width .5s steps(10)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;text-align:center}
+.stats div{background:var(--field);border:3px solid var(--shellEdge);padding:6px 2px}
+.stats b{display:block;font-family:'Press Start 2P',monospace;font-size:14px;margin-bottom:4px}
+.stats span{font-size:17px;color:var(--muted)}
+.panel{background:var(--field);border:4px solid var(--shellEdge);border-radius:8px;padding:14px}
+.panel h2{font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.6;margin:0 0 8px}
+code{background:var(--shell);padding:1px 6px;font-size:18px;word-break:break-all;display:block;margin:6px 0 10px;border-radius:3px}
+textarea{width:100%;height:150px;background:var(--screen);color:var(--screenInk);border:3px solid var(--ink);border-radius:4px;font:inherit;font-size:18px;padding:8px;resize:vertical}
+button{font-family:'Press Start 2P',monospace;font-size:11px;background:var(--btn);color:var(--btnInk);border:3px solid var(--ink);border-radius:4px;padding:10px 12px;cursor:pointer;margin:8px 8px 0 0}
+button.alt{background:var(--shell);color:var(--ink)}
+button:active{transform:translateY(2px)}
+:focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+.habits{margin-top:14px}
+.habits .h{margin:8px 0}
+.habits .bar{background:var(--shell);height:10px}
+.habits .bar i{background:var(--btn)}
+.err{color:#d6453a;min-height:1.2em;margin:6px 0 0}
+.evo{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:18px}
+.evo span{padding:2px 8px;border:3px solid var(--shellEdge);border-radius:3px;color:var(--muted)}
+.evo span.on{background:#ffd166;color:#2a2547;border-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Seu pet-robô de commits</h1>
+<p class="sub">Cole seu histórico do GitHub e veja o robô evoluir. Mais constância e commits, mais ele cresce; sumiu uns dias, ele fica sonolento. Commits de teste rendem 4 XP cada e liberam acessórios.</p>
+<div class="grid">
+  <section class="shell" aria-label="Pet">
+    <div class="screen">
+      <div class="row"><span class="stage" id="stage">Chip</span><span id="xp">0 XP</span></div>
+      <div class="bar" aria-hidden="true"><i id="xpbar"></i></div>
+      <canvas id="cv" width="20" height="18" role="img" aria-label="Pet-robô em pixel art"></canvas>
+      <div class="zz" id="zz"></div>
+      <p class="say" id="say">Estou sem energia. Me alimente com seus commits!</p>
+    </div>
+    <div class="stats">
+      <div><b id="sStreak">0</b><span>dias seguidos</span></div>
+      <div><b id="sDays">0</b><span>dias ativos</span></div>
+      <div><b id="sCommits">0</b><span>commits</span></div>
+    </div>
+    <div class="evo" id="evo"></div>
+    <div class="evo" id="acc" aria-label="Acessórios"></div>
+  </section>
+  <section class="panel" aria-label="Alimentar">
+    <h2>Alimentar com commits</h2>
+    <p style="margin:0">No terminal, dentro do seu repositório, rode:</p>
+    <code>git log --since="90 days ago" --pretty=format:"%ad %s" --date=short</code>
+    <label for="inp" style="display:block;margin-bottom:4px">Cole o resultado aqui (uma linha por commit, data no formato AAAA-MM-DD):</label>
+    <textarea id="inp" spellcheck="false" placeholder="2026-10-29 feat: adiciona login&#10;2026-10-28 fix: corrige bug no carrinho&#10;2026-10-28 test: cobre pagamento"></textarea>
+    <button id="feed">Alimentar</button><button id="demo" class="alt">Usar exemplo</button><button id="clear" class="alt">Limpar</button>
+    <p class="err" id="err" role="alert"></p>
+    <div class="habits" id="habits"></div>
+  </section>
+</div>
+</main>
+<script>
+(function(){
+var COL={b:'#8fb4ff',d:'#3b4a8c',a:'#ff7a6b',g:'#ffd166'};
+var S=[
+['...a....','...d....','.bbbbbb.','.bEbbEb.','.bbbbbb.','.bddddb.','..b..b..'],
+['....aa....','....d.....','..bbbbbb..','.bbbbbbbb.','.bEEbbEEb.','.bbbbbbbb.','.bddddddb.','..bbbbbb..','..bb..bb..','..dd..dd..'],
+['.....aa.....','.....dd.....','...bbbbbb...','..bbbbbbbb..','..bEEbbEEb..','..bbbbbbbb..','..bddddddb..','.bbbbbbbbbb.','bb.bbaabb.bb','bb.bbbbbb.bb','...bb..bb...','...dd..dd...'],
+['......aa......','......dd......','.....bbbb.....','...bbbbbbbb...','..bbbbbbbbbb..','..bEEEbbEEEb..','..bbbbbbbbbb..','..bddddddddb..','.aabbbbbbbbaa.','aabbbaaaabbbaa','aa.bbbaabbb.aa','...bbbbbbbb...','...bb....bb...','...dd....dd...']
+];
+S[4]=S[3].slice();S[4][0]='.g..g.aa.g..g.';S[4][1]='.d..d.dd.d..d.';S[4]=S[4].map(function(r){return r.replace(/a/g,'g')});S[4][0]=S[4][0];
+var NAMES=['Chip','Pixel','Bit','Byte','Mega'],TH=[0,15,60,150,350];
+var cv=document.getElementById('cv'),cx=cv.getContext('2d'),stage=0,mood='ok',frame=0,acc={};
+function item(x0,y0,rows,map){rows.forEach(function(r,j){for(var i=0;i<r.length;i++){if(r[i]!=='.'){cx.fillStyle=map[r[i]];cx.fillRect(x0+i,y0+j,1,1)}}})}
+var $=function(i){return document.getElementById(i)};
+function draw(){
+  cx.clearRect(0,0,20,18);
+  cx.fillStyle='rgba(215,224,255,.25)';cx.fillRect(3,17,14,1);
+  var sp=S[stage],w=sp[0].length,h=sp.length,ox=Math.floor((20-w)/2),oy=17-h-(frame&&mood!=='sleepy'?1:0),top=0,er=0;while(sp[top].indexOf('b')<0)top++;while(sp[er].indexOf('E')<0)er++;
+  var eye=mood==='happy'?'#7dffea':mood==='ok'?'#ffd166':'#6b7199';
+  for(var y=0;y<h;y++)for(var x=0;x<w;x++){var c=sp[y][x];if(c==='.')continue;
+    cx.fillStyle=c==='E'?eye:COL[c];if(c==='b'){if(acc.cap&&y===top)cx.fillStyle='#ff7a6b';if(acc.glasses&&y===er)cx.fillStyle='#f4f6ff';}
+    if(c==='E'&&mood==='sleepy'&&sp[y+1]&&sp[y+1][x]==='E')continue;
+    cx.fillRect(ox+x,oy+y,1,1);}
+  var ay=oy+h-6;
+  if(acc.shield)item(ox-3,ay,['sss','sWs','sWs','.s.'],{s:'#7dffea',W:'#f4f6ff'});
+  if(acc.book)item(ox+w,ay,['ggg','gRg','gRg','ggg'],{g:'#ffd166',R:'#ff7a6b'});
+}
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!reduce)setInterval(function(){frame^=1;draw()},550);
+function day(s){var m=s.match(/(\d{4})-(\d{2})-(\d{2})/);return m?Math.floor(Date.UTC(+m[1],+m[2]-1,+m[3])/864e5):null}
+function analyze(txt){
+  var lines=txt.split(/\r?\n/),ds={},n=0,k={test:0,docs:0,refac:0,fix:0},today=Math.floor(Date.now()/864e5);
+  lines.forEach(function(l){var d=day(l);if(d===null||d>today+1)return;n++;ds[d]=1;var m=l.toLowerCase();
+    if(/test|spec/.test(m))k.test++;if(/doc|readme|coment/.test(m))k.docs++;
+    if(/refactor|refator|clean|limp/.test(m))k.refac++;if(/fix|bug|corrig|hotfix/.test(m))k.fix++;});
+  var keys=Object.keys(ds).map(Number).sort(function(a,b){return a-b}),best=0,run=0,prev=null;
+  keys.forEach(function(d){run=(prev!==null&&d===prev+1)?run+1:1;if(run>best)best=run;prev=d});
+  var cur=0,d=ds[today]?today:today-1;while(ds[d]){cur++;d--}
+  var last=keys.length?today-keys[keys.length-1]:null,a30=keys.filter(function(d){return today-d<30}).length;
+  return {n:n,days:keys.length,best:best,cur:cur,last:last,a30:a30,k:k};
+}
+function render(r){
+  var xp=r.n+r.days*3+r.best*2+r.k.test*3;
+  acc={shield:r.k.test>=3&&r.k.test/r.n>=.2,book:r.k.docs>=2&&r.k.docs/r.n>=.1,cap:r.best>=7,glasses:r.k.refac>=2&&r.k.refac/r.n>=.1};
+  var AC=[['shield','Escudo','testes ≥ 20%'],['book','Livro','docs ≥ 10%'],['cap','Boné','7 dias seguidos'],['glasses','Óculos','refatoração ≥ 10%']];
+  $('acc').innerHTML=AC.map(function(a){return '<span class="'+(acc[a[0]]?'on':'')+'">'+(acc[a[0]]?a[1]:a[1]+' ('+a[2]+')')+'</span>'}).join('');
+  stage=0;TH.forEach(function(t,i){if(xp>=t)stage=i});
+  mood=r.n===0?'sleepy':r.last<=1?'happy':r.last<=4?'ok':'sleepy';
+  var lo=TH[stage],hi=TH[stage+1];
+  $('stage').textContent=NAMES[stage];$('xp').textContent=xp+' XP';
+  $('xpbar').style.width=(hi?Math.min(100,(xp-lo)/(hi-lo)*100):100)+'%';
+  $('sStreak').textContent=r.cur;$('sDays').textContent=r.days;$('sCommits').textContent=r.n;
+  $('zz').textContent=mood==='sleepy'?'z z z':'';
+  var say=r.n===0?'Estou sem energia. Me alimente com seus commits!':
+    mood==='happy'?'Energia lá em cima! '+(r.cur>1?r.cur+' dias seguidos, continue assim.':'Bom ver você de volta.'):
+    mood==='ok'?'Faz '+r.last+' dias do último commit. Um commit hoje me anima.':
+    'Faz '+r.last+' dias sem commit. Estou sonolento...';
+  if(hi&&r.n)say+=' Faltam '+(hi-xp)+' XP para virar '+NAMES[stage+1]+'.';
+  if(!hi)say+=' Forma máxima alcançada!';
+  $('say').textContent=say;
+  $('evo').innerHTML=NAMES.map(function(nm,i){return '<span class="'+(i<=stage?'on':'')+'">'+nm+' '+TH[i]+'</span>'}).join('');
+  var pct=function(v){return r.n?Math.round(v/r.n*100):0};
+  var H=[['Constância (últimos 30 dias)',Math.round(r.a30/30*100)],['Commits de teste',pct(r.k.test)],['Commits de documentação',pct(r.k.docs)],['Commits de refatoração',pct(r.k.refac)],['Commits de correção',pct(r.k.fix)]];
+  $('habits').innerHTML=H.map(function(h){return '<div class="h"><div class="row"><span>'+h[0]+'</span><span>'+h[1]+'%</span></div><div class="bar"><i style="width:'+h[1]+'%"></i></div></div>'}).join('');
+  draw();
+}
+function feed(){
+  var t=$('inp').value,r=analyze(t);
+  $('err').textContent=r.n?'':'Não encontrei datas no formato AAAA-MM-DD. Confira o comando acima.';
+  try{localStorage.setItem('petrobo',t)}catch(e){}
+  render(r);
+}
+function demo(){
+  var today=Math.floor(Date.now()/864e5),msgs=['feat: nova tela de perfil','fix: corrige erro no login','test: cobre fluxo de pagamento','docs: atualiza README','refactor: simplifica serviço de busca','feat: adiciona filtros'],out=[],i=0;
+  for(var d=0;d<45;d++){if(d%7===4||d%11===6)continue;var c=1+(d*3)%3;
+    for(var j=0;j<c;j++){var dt=new Date((today-d)*864e5).toISOString().slice(0,10);out.push(dt+' '+msgs[i++%msgs.length])}}
+  $('inp').value=out.join('\n');feed();
+}
+$('feed').onclick=feed;$('demo').onclick=demo;
+$('clear').onclick=function(){$('inp').value='';$('err').textContent='';try{localStorage.removeItem('petrobo')}catch(e){}render(analyze(''))};
+try{var sv=localStorage.getItem('petrobo');if(sv){$('inp').value=sv}}catch(e){}
+render(analyze($('inp').value));
+})();
+</script>
+</body>
+</html>
